@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id         String   @id @default(cuid())
+  name       String
+  email      String   @unique
+  phone      String?
+  state      String?
+  city       String?
+  bio        String?
+  avatar     String?
+  rating     Float    @default(0)
+  totalSales Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  listings  Listing[]
+  orders    Order[]   @relation("buyer")
+  sales     Order[]   @relation("seller")
+  reviews   Review[]  @relation("reviewer")
+  received  Review[]  @relation("reviewed")
+}
+
+model Listing {
+  id          String   @id @default(cuid())
+  title       String
+  brand       String
+  partNumber  String
+  type        String
+  condition   String
+  warranty    String
+  price       Float
+  description String?
+  compatible  String?
+  state       String
+  city        String
+  images      String   @default("[]")
+  status      String   @default("active")
+  views       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sellerId  String
+  seller    User    @relation(fields: [sellerId], references: [id])
+  orders    Order[]
+}
+
+model Order {
+  id        String   @id @default(cuid())
+  status    String   @default("pending")
+  total     Float
+  address   String?
+  trackCode String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id])
+  buyerId   String
+  buyer     User    @relation("buyer", fields: [buyerId], references: [id])
+  sellerId  String
+  seller    User    @relation("seller", fields: [sellerId], references: [id])
+  review    Review?
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  orderId    String @unique
+  order      Order  @relation(fields: [orderId], references: [id])
+  reviewerId String
+  reviewer   User   @relation("reviewer", fields: [reviewerId], references: [id])
+  reviewedId String
+  reviewed   User   @relation("reviewed", fields: [reviewedId], references: [id])
+}
